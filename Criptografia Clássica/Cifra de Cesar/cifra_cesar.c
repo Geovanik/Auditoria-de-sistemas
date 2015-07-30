@@ -2,16 +2,31 @@
 #include <string.h>
 #include <stdlib.h>
 
-int main(int tam_vet, char *texto[]){//texto é o arquivo recebido
-	FILE *arq=NULL;
-
-
-	arq = fopen(texto[1],"r");
-	if(!arq){
-		return 0;//deve retornar ponteiro da lista nulo 
+int main(void){
+	int chave=0;
+	char entrada[]="texto",lendo;
+	FILE *arq;
+	
+	printf("digite a chave");
+	scanf("%d",&chave);
+	
+	arq = fopen(entrada, "r");
+	if(arq == NULL){
+		printf("Erro, nao foi possivel abrir o arquivo\n");
+		return 0;	
 	}
 
+	while( (lendo=fgetc(arq))!= EOF ){
+		printf("letra %c\n",lendo);
+		
+		lendo=(lendo+256+chave)%256;//formula de criptografia
+		
+		
+		printf("%c\n",lendo);	
+	}
+	fclose(arq);
 	
-
 	return 0;
 }
+
+
