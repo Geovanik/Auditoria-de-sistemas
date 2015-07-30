@@ -7,7 +7,6 @@ int main(void){
 	char entrada[]="texto",lendo;
 	FILE *arq;
 	
-	printf("digite a chave");
 	scanf("%d",&chave);
 	
 	arq = fopen(entrada, "r");
@@ -17,14 +16,13 @@ int main(void){
 	}
 
 	while( (lendo=fgetc(arq))!= EOF ){
-		printf("letra %c\n",lendo);
-		
+		//printf("letra %c\n",lendo);
 		lendo=(lendo+256+chave)%256;//formula de criptografia
-		
-		
-		printf("%c\n",lendo);	
+		printf("%c",lendo);	
 	}
 	fclose(arq);
+	
+	
 	
 	return 0;
 }
