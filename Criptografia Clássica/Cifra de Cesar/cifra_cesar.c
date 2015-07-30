@@ -1,30 +1,17 @@
+
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#define CHAVE 3
 
 int main(void){
-	int chave=0;
-	char entrada[]="texto",lendo;
-	FILE *arq;
-	
-	scanf("%d",&chave);
-	
-	arq = fopen(entrada, "r");
-	if(arq == NULL){
-		printf("Erro, nao foi possivel abrir o arquivo\n");
-		return 0;	
-	}
 
-	while( (lendo=fgetc(arq))!= EOF ){
-		//printf("letra %c\n",lendo);
-		lendo=(lendo+256+chave)%256;//formula de criptografia
+	char lendo;
+	
+	while(scanf("%c",&lendo)!=EOF){//le o arquivo vindo por montagem de arquivo na compilação
+		lendo=(lendo+256+CHAVE)%256;//formula de criptografia
 		printf("%c",lendo);	
 	}
-	fclose(arq);
-	
-	
-	
 	return 0;
 }
-
-
