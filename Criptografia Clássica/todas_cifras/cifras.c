@@ -1,5 +1,5 @@
 
-//como compilar: gcc cifra_cesar.c -o cifra_cesar -Wall       ./cifra_cesar < texto > criptografado  "texto é o arquivo com dados a serem criptografados"
+//como compilar: gcc cifras.c -o cifras -Wall       ./cifra_cesar texto  "texto é o arquivo com dados a serem criptografados"
 
 //OBS: SE NÃO TRABALHAR COM UNSIGNED CHAR OS VALORES FICAM NEGATIVOS, É POSSÍVEL IMPRIMIR CARACTERES NEGATIVOS???
 // e quando a entrada for menor que a chave????
@@ -47,54 +47,84 @@ void decifra_cesar(int chave,FILE *arq){
 }
 
 
-void cifra_vigenere (char chave[],FILE *arq){
+void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
 	int tam_entrada=0,aux=0,i=0;
 	char lendo;
-	unsigned char entrada[1000],criptografado[1000];
+	unsigned char entrada[1000],criptografado[1000];//texto pode ter ate 1000 caracteres
 	unsigned int tam_chave=0;
+	FILE *arq_escrita;
 	
-	while(scanf("%c",&lendo)!=EOF){//le o arquivo vindo por montagem de arquivo na compilação
+	
+	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;
-		tam_entrada++;
+		tam_entrada++;//guarda o tamanho da entrada
 	}
-	entrada[tam_entrada-1]='\0';
+	//tam_entrada-=1;
+	entrada[tam_entrada]='\0';
 	
-	
-	
-	//printf("\ntamanho %d %d\n",tam_entrada,tam_chave);
-	
-	//strlen nao funciona para unsigned char
-	while(chave[i] != '\0'){
+	printf("tamanho da entrada : %d\n",tam_entrada);
+	while(chave[i] != '\0'){//feito para saber o tamanho da chave ja que unsigned char nao funciona strlen
 		tam_chave++;
 		i++;
 	}
-	
-	while(tam_chave < (tam_entrada-1)){//deixando a chave no tamanho da entrada
+	//tam_chaveaux = tam_chave;//guarda valor original da chave
+	while(tam_chave < tam_entrada){//deixando a chave no tamanho da entrada
 		chave[tam_chave] = chave[aux];
 		tam_chave++;
 		aux++;
-		if(aux > tam_chave)
-			aux=0;
+		//if(aux > tam_chave)
+			//aux=0;
 	}
 	
-	for(i=0;i < tam_entrada;i++){
+	chave[tam_chave]='\0';
+	printf("tamanho da chave : %d\n",tam_chave);
+	
+	printf("/nop = %d/n",opcao);
+	if(opcao==1){
+		for(i=0;i < tam_entrada;i++){
+			
+			criptografado[i] = ((entrada[i]+chave[i]+256)%256);
+		}
+		criptografado[i]='\0';
 		
-		criptografado[i] = ((entrada[i]+chave[i]+256)%256);
-		/*printf("entrada na posicao i: %d\n",entrada[i]);
-		printf("chave na posicao i: %d\n",chave[i]);
-		printf("criptografado na posicao i: %d\n",criptografado[i]);
-		printf("%c\n",criptografado[i]);*/
-	}
-
-	criptografado[i]='\0';
-
-	printf("%s\n",entrada);
-	//printf("%s\n",chave);
-	printf("%s\n",criptografado);
+		printf("%s\n\n\n",entrada);
+		printf("%s\n\n\n",chave);
+		printf("%s\n\n\n",criptografado);
+	
+		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+	
+		fprintf(arq_escrita,"%s",criptografado);
+		fclose(arq_escrita);
+		
+	}else{
+		for(i=0;i < tam_entrada;i++){
+			
+			criptografado[i] = ((entrada[i]-chave[i]+256)%256);
+		}
+		criptografado[i]='\0';
+		printf("crip %s\n",criptografado);
+		
+		printf("%s\n\n\n",entrada);
+		printf("%s\n\n\n",chave);
+		printf("%s\n\n\n",criptografado);
+	
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+	
+		fprintf(arq_escrita,"%s",criptografado);
+		fclose(arq_escrita);
+	}	
 }
 
 int main(int tam_vet, char *parametros[]){
-	int op=-1,chave=-1;
+	int op=-1,chave=-1,op2=-1;
 	char chave_text[1000];
 	FILE *arq=NULL; 
 	
@@ -103,42 +133,53 @@ int main(int tam_vet, char *parametros[]){
 	printf("| MENU digite o numero para executar a funcao:       |\n");
 	printf("|                                                    |\n");
 	printf("| 0-cifra de cesar                                   |\n");
-	printf("| 1-cifra de transposicao                            |\n");
-	printf("| 2-cifra de vigenere                                |\n");
+	printf("| 1-cifra de vigenere                                |\n");
+	printf("| 2-cifra de transposicao                            |\n");
 	printf("| 3-cifra de substiuicao                             |\n");
 	printf("| 10-Sair                                            |\n");
 	printf("'----------------------------------------------------'\n");
 	scanf("%d", &op);
 	printf("\n\n");
 	
-	arq = fopen(parametros[1],"r");
-	if(!arq){
-		printf("Impossivel abrir arquivo passado\n");
-		return 0;
-	}
-	
+	printf(" 1 para cifrar : 2 para decifrar \n");
+	scanf("%d",&op2);
+			
 	switch (op){
 		case 0://cifra de cesar
-			printf(" 1 para cifrar : 2 para decifrar \n");
-			scanf("%d",&op);
 			
 			printf("Digite a chave: ");
 			scanf("%d",&chave);
 			
-			if(op==1)
+			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
+			if(!arq){
+				printf("Impossivel abrir arquivo passado\n");
+				return 0;
+			}
+			
+			if(op2==1)
 				cifra_cesar(chave,arq);
 			else
 				decifra_cesar(chave,arq);
 				
-			fclose(arq);
+			fclose(arq);//poderia fechar antes e abrir dentro das funcoes, ver relacao de beneficio
+			
 		break;
-		case 1://cifra de 
+		case 1://cifra de vigenere
 			printf("Digite a chave: ");
-			//guardar chave
+			getchar();//limpeza do buffer
+			fgets(chave_text,sizeof(chave_text),stdin);//chave de ate 100 caracteres
+			chave_text[strlen(chave_text)-1]='\0';//substitui /n por /0
 			
-			//coloque /0 na chave
+			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
+			if(!arq){
+				printf("Impossivel abrir arquivo passado por parametro!\n");
+				return 0;
+			}
+
+			cifra_vigenere (chave_text,arq,op2);//cifrando
+		
+			fclose(arq);
 			
-			cifra_vigenere (chave_text,arq);
 		break;
 		case 2://cifra de 
 		
