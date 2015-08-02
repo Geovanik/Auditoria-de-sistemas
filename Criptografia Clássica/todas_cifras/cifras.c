@@ -3,6 +3,7 @@
 
 //OBS: SE NÃO TRABALHAR COM UNSIGNED CHAR OS VALORES FICAM NEGATIVOS, É POSSÍVEL IMPRIMIR CARACTERES NEGATIVOS???
 // e quando a entrada for menor que a chave????
+
  
 #include <stdio.h>
 #include <string.h>
@@ -124,7 +125,7 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 }
 
 
-void cifra_transposicao (int chave,FILE *arq){
+void cifra_transposicao (int chave,FILE *arq, int opcao){
 	int i=0,j=0,controle_entrada=0,cont=0,colunas=0,tam_entrada=0;
 	char lendo,entrada[1000];
 	FILE *arq_escrita=NULL;
@@ -144,40 +145,71 @@ void cifra_transposicao (int chave,FILE *arq){
 	
 	colunas=tam_entrada/chave;
 
-	char vetor[chave];
+	//char vetor[chave];
 	char matriz[chave][colunas];
 	
-	for(i=0;i < colunas; i++){//inserindo elementos do vetor na matriz
-		while(cont<chave){//inserindo elementos no vetor de swap
-			
-			vetor[cont]=entrada[controle_entrada];
+	if(opcao==1){//cifrando texto
+		for(i=0;i < colunas; i++){//inserindo elementos do vetor na matriz
+			/*while(cont<chave){//inserindo elementos no vetor de swap
 				
-			cont++;
-			controle_entrada++;
-		}	
-		
-		for(j=0;j<chave;j++){//inserindo elementos na matriz na vertical
-			matriz[j][i]=vetor[j];
-			printf("%c\n",matriz[j][i]);
+				vetor[cont]=entrada[controle_entrada];
+					
+				cont++;
+				controle_entrada++;
+			}	*/
+			
+			for(j=0;j<chave;j++){//inserindo elementos na matriz na vertical
+				//matriz[j][i]=vetor[j];
+				matriz[j][i]=entrada[controle_entrada];
+				printf("%c\n",matriz[j][i]);
+				controle_entrada++;//adicionado
+			}
+			//cont=0;
 		}
-		cont=0;
-	}
-	
-	arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		
+		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+			if(!arq_escrita){
+				printf("Impossivel abrir arquivo para salvar dados\n");
+				return;
+			}
+			
+		for(i=0;i < chave;i++){//lendo a matriz na horizontal e escrevendo no arquivo criptografado
+			
+			for(j=0;j < colunas;j++){
+				printf("%c",matriz[i][j]);
+				putc (matriz[i][j],arq_escrita);//escreve caracter no arquivo
+			}
+		}
+		
+		fclose(arq_escrita);
+		
+	}else{//decifrando
+
+		for(i=0;i < chave;i++){//colocando os valores na matriz na horizontal
+			
+			for(j=0;j < colunas;j++){		
+				matriz[i][j]=entrada[cont];
+				cont++;
+			}
+		}
+		
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
 		}
 		
-	for(i=0;i < chave;i++){//lendo a matriz na horizontal e escrevendo no arquivo criptografado
-		
-		for(j=0;j < colunas;j++){
-			printf("%c",matriz[i][j]);
-			putc (matriz[i][j],arq_escrita);//escreve caracter no arquivo
+		for(i=0;i < colunas; i++){//lendo os valores na vertical
+			for(j=0;j<chave;j++){
+				
+				if(matriz[j][i]=='#')
+					putc (' ',arq_escrita);//escreve caracter no arquivo
+				else
+					putc (matriz[j][i],arq_escrita);//escreve caracter no arquivo
+			}
 		}
+		fclose(arq_escrita);
 	}
-	
-	fclose(arq_escrita);
 }
 
 int main(int tam_vet, char *parametros[]){
@@ -247,13 +279,10 @@ int main(int tam_vet, char *parametros[]){
 				printf("Impossivel abrir arquivo passado\n");
 				return 0;
 			}
-			
-			//if(op2==1)
-				cifra_transposicao(chave,arq);
-			//else
-				//decifra_transposicao(chave,arq);
+
+			cifra_transposicao(chave,arq,op2);
 				
-			fclose(arq);//poderia fechar antes e abrir dentro das funcoes, ver relacao de beneficio
+			fclose(arq);
 			
 		break;
 		case 3://cifra de 
