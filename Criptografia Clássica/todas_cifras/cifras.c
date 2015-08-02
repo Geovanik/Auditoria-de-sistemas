@@ -123,6 +123,63 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	}	
 }
 
+
+void cifra_transposicao (int chave,FILE *arq){
+	int i=0,j=0,controle_entrada=0,cont=0,colunas=0,tam_entrada=0;
+	char lendo,entrada[1000];
+	FILE *arq_escrita=NULL;
+	
+	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
+		entrada[tam_entrada]=lendo;
+		tam_entrada++;//guarda o tamanho da entrada
+	}
+	tam_entrada-=1;//pq estava contando o eof
+	entrada[tam_entrada]='\0';
+	
+	while(tam_entrada%chave!=0){//o tamanho da entrada deve ter divisao exata pela chave
+		entrada[tam_entrada]='#';//simbolo escolhido para preencher 
+		tam_entrada++;
+		entrada[tam_entrada]='\0';//finalizando entrada
+	}
+	
+	colunas=tam_entrada/chave;
+
+	char vetor[chave];
+	char matriz[chave][colunas];
+	
+	for(i=0;i < colunas; i++){//inserindo elementos do vetor na matriz
+		while(cont<chave){//inserindo elementos no vetor de swap
+			
+			vetor[cont]=entrada[controle_entrada];
+				
+			cont++;
+			controle_entrada++;
+		}	
+		
+		for(j=0;j<chave;j++){//inserindo elementos na matriz na vertical
+			matriz[j][i]=vetor[j];
+			printf("%c\n",matriz[j][i]);
+		}
+		cont=0;
+	}
+	
+	arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+		
+	for(i=0;i < chave;i++){//lendo a matriz na horizontal e escrevendo no arquivo criptografado
+		
+		for(j=0;j < colunas;j++){
+			printf("%c",matriz[i][j]);
+			putc (matriz[i][j],arq_escrita);//escreve caracter no arquivo
+		}
+	}
+	
+	fclose(arq_escrita);
+}
+
 int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1;
 	char chave_text[1000];
@@ -181,8 +238,23 @@ int main(int tam_vet, char *parametros[]){
 			fclose(arq);
 			
 		break;
-		case 2://cifra de 
-		
+		case 2://cifra de transposicao
+			printf("Digite a chave: ");
+			scanf("%d",&chave);
+			
+			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
+			if(!arq){
+				printf("Impossivel abrir arquivo passado\n");
+				return 0;
+			}
+			
+			//if(op2==1)
+				cifra_transposicao(chave,arq);
+			//else
+				//decifra_transposicao(chave,arq);
+				
+			fclose(arq);//poderia fechar antes e abrir dentro das funcoes, ver relacao de beneficio
+			
 		break;
 		case 3://cifra de 
 		
