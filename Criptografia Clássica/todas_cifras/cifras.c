@@ -4,6 +4,10 @@
 //OBS: SE NÃO TRABALHAR COM UNSIGNED CHAR OS VALORES FICAM NEGATIVOS, É POSSÍVEL IMPRIMIR CARACTERES NEGATIVOS???
 // e quando a entrada for menor que a chave????
 
+//cesar gcc cifras.c -o cifras -Wall       ./cifras texto     ./cifras criptografado
+//vigenere 		 igual cesar
+//transposição
+//substituição  ./cifras texto tabela3  
  
 #include <stdio.h>
 #include <string.h>
@@ -60,37 +64,28 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		entrada[tam_entrada]=lendo;
 		tam_entrada++;//guarda o tamanho da entrada
 	}
-	//tam_entrada-=1;
+
 	entrada[tam_entrada]='\0';
 	
-	printf("tamanho da entrada : %d\n",tam_entrada);
 	while(chave[i] != '\0'){//feito para saber o tamanho da chave ja que unsigned char nao funciona strlen
 		tam_chave++;
 		i++;
 	}
-	//tam_chaveaux = tam_chave;//guarda valor original da chave
+	
 	while(tam_chave < tam_entrada){//deixando a chave no tamanho da entrada
 		chave[tam_chave] = chave[aux];
 		tam_chave++;
 		aux++;
-		//if(aux > tam_chave)
-			//aux=0;
 	}
 	
 	chave[tam_chave]='\0';
-	printf("tamanho da chave : %d\n",tam_chave);
 	
-	printf("/nop = %d/n",opcao);
 	if(opcao==1){
 		for(i=0;i < tam_entrada;i++){
 			
 			criptografado[i] = ((entrada[i]+chave[i]+256)%256);
 		}
 		criptografado[i]='\0';
-		
-		printf("%s\n\n\n",entrada);
-		printf("%s\n\n\n",chave);
-		printf("%s\n\n\n",criptografado);
 	
 		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
 		if(!arq_escrita){
@@ -107,11 +102,6 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 			criptografado[i] = ((entrada[i]-chave[i]+256)%256);
 		}
 		criptografado[i]='\0';
-		printf("crip %s\n",criptografado);
-		
-		printf("%s\n\n\n",entrada);
-		printf("%s\n\n\n",chave);
-		printf("%s\n\n\n",criptografado);
 	
 		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
 		if(!arq_escrita){
@@ -145,26 +135,15 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	
 	colunas=tam_entrada/chave;
 
-	//char vetor[chave];
 	char matriz[chave][colunas];
 	
 	if(opcao==1){//cifrando texto
 		for(i=0;i < colunas; i++){//inserindo elementos do vetor na matriz
-			/*while(cont<chave){//inserindo elementos no vetor de swap
-				
-				vetor[cont]=entrada[controle_entrada];
-					
-				cont++;
-				controle_entrada++;
-			}	*/
 			
 			for(j=0;j<chave;j++){//inserindo elementos na matriz na vertical
-				//matriz[j][i]=vetor[j];
 				matriz[j][i]=entrada[controle_entrada];
-				printf("%c\n",matriz[j][i]);
 				controle_entrada++;//adicionado
 			}
-			//cont=0;
 		}
 		
 		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
@@ -176,7 +155,6 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		for(i=0;i < chave;i++){//lendo a matriz na horizontal e escrevendo no arquivo criptografado
 			
 			for(j=0;j < colunas;j++){
-				printf("%c",matriz[i][j]);
 				putc (matriz[i][j],arq_escrita);//escreve caracter no arquivo
 			}
 		}
@@ -212,10 +190,116 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	}
 }
 
+
+//eof -1 escreve o unsigned char no arquivo normal
+/*
+void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos ja abertos
+	char pontos,lendo;
+	int comparando=0,comparado=0;
+	FILE *arq_escrita=NULL;
+	
+	if(opcao==1){//cifra
+		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+	}else{//decifra, opcao==2
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+		return;
+		}	
+	}
+	
+	
+	//fseek(arq, 0, SEEK_SET);	
+	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo de entrada um caracter por vez
+
+		printf("lendo %c\n",lendo);
+		fseek(tabela, 0, SEEK_SET);//posiciona a cabeca de leitura no inicio do arq
+		while( (fscanf(tabela,"%d%c%d\n", &comparando, &pontos, &comparado))!=EOF ){//lendo a tabela de substituicao
+			
+			//if(lendo<0){//para leitura negatica de caracterres
+				//procura=256+lendo;
+				//printf("%d\n",procura);
+			//}
+			
+			if(opcao==1){
+				if(lendo==comparando){
+					//printf("lendo %c\n",lendo);
+				
+					printf("escrevendo %d",lendo);
+					fputc(comparado,arq_escrita);
+					break;
+				}
+			}
+			if(opcao==2){//trata a leitura de char negativo
+				if(lendo==comparado){
+					//printf("procura %c\n",procura);
+					printf("escrevendo %d",lendo);
+					fputc(comparando,arq_escrita);
+					break;
+				}
+			}
+		}
+	}
+		
+	fclose(arq_escrita);
+}*/
+
+
+void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos ja abertos
+	char lendo,pontos;
+	int comparando=0,comparado=0,procura=0;
+	FILE *arq_escrita=NULL;
+	
+	if(opcao==1){//cifra
+		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+	}else{//decifra, opcao==2
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+		return;
+		}	
+	}
+		
+	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo de entrada um caracter por vez
+
+		fseek(tabela, 0, SEEK_SET);//posiciona a cabeca de leitura no inicio do arq
+		while( (fscanf(tabela,"%d%c%d\n", &comparando, &pontos, &comparado))!=EOF ){//lendo a tabela de substituicao
+			
+			if(lendo<0){//para leitura negatica de caracterres
+				procura=256+lendo;
+			}
+			
+			if(opcao==1){
+				if(lendo==comparando){
+					//printf("lendo %c\n",lendo);
+					fputc(comparado,arq_escrita);
+					break;
+				}
+			}else{
+				if(procura==comparando){
+					//printf("lendo %c\n",lendo);
+					fputc(comparado,arq_escrita);
+					break;
+				}
+			}
+		}
+	}
+		
+	fclose(arq_escrita);
+}
+
 int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1;
 	char chave_text[1000];
-	FILE *arq=NULL; 
+	FILE *arq=NULL,*substituicao=NULL; 
 	
 	printf("\n\n");
 	printf(".----------------------------------------------------.\n");
@@ -254,7 +338,7 @@ int main(int tam_vet, char *parametros[]){
 			
 		break;
 		case 1://cifra de vigenere
-			printf("Digite a chave: ");
+			printf("Digite um texto como chave: ");
 			getchar();//limpeza do buffer
 			fgets(chave_text,sizeof(chave_text),stdin);//chave de ate 100 caracteres
 			chave_text[strlen(chave_text)-1]='\0';//substitui /n por /0
@@ -285,8 +369,25 @@ int main(int tam_vet, char *parametros[]){
 			fclose(arq);
 			
 		break;
-		case 3://cifra de 
+		case 3://cifra de substituicao
 		
+			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
+			if(!arq){
+				printf("Impossivel abrir arquivo passado\n");
+				return 0;
+			}
+			
+			substituicao = fopen(parametros[2],"r");//abriu o arquivo com a substituicao
+			if(!substituicao){
+				printf("Impossivel abrir arquivo de substituicao\n");
+				return 0;
+			}
+			
+			cifra_substituicao(arq,substituicao,op2);//manda arquivos ja abertos
+			
+			fclose(arq);
+			fclose(substituicao);
+			
 		break;
 		case 10://sair
 			printf("FIM \n");
