@@ -12,6 +12,23 @@
 #include <string.h>
 #include <stdlib.h>
 
+typedef struct caracters{
+	int comparando;
+	int comparado;
+}caracters;
+
+
+int buscaBinaria (int x, caracters v[]) {
+   int e, m, d;                              // 1
+   e = 0; d = 255;                           // 2
+   while (e <= d) {                          // 3
+      m = (e + d)/2;                         // 4
+      if (v[m].comparando == x) return m;               // 5
+      if (v[m].comparando < x) e = m + 1;               // 6
+      else d = m - 1;                        // 7
+   }                                         // 8
+   return -1;                                // 9
+}          
 
 void cifra_cesar(int chave,FILE *arq){
 	FILE *arq_escrita;
@@ -248,10 +265,11 @@ void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos
 }*/
 
 
-void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos ja abertos
+void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
-	int comparando=0,comparado=0,procura=0;
-	FILE *arq_escrita=NULL;
+	int i=0,aux=0,procura;
+	FILE *arq_escrita=NULL,*tabela=NULL;
+	caracters vetor[256];
 	
 	if(opcao==1){//cifra
 		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
@@ -266,39 +284,52 @@ void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos
 		return;
 		}	
 	}
+	
+	tabela = fopen(tabela_char,"r");//abrir a tabela de caracters
+		if(!tabela){
+			printf("Impossivel abrir arquivo com a tabela de caracters\n");
+		return;
+		}		
 		
+	while( (fscanf(tabela,"%d%c%d\n", &vetor[i].comparando, &pontos, &vetor[i].comparado))!=EOF )//lendo a tabela de substituicao e guardando
+		i++;
+		
+	
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo de entrada um caracter por vez
 
-		fseek(tabela, 0, SEEK_SET);//posiciona a cabeca de leitura no inicio do arq
-		while( (fscanf(tabela,"%d%c%d\n", &comparando, &pontos, &comparado))!=EOF ){//lendo a tabela de substituicao
+		if(lendo<0){//para leitura negatica de caracterres
+			procura=256+lendo;
+			aux = buscaBinaria(procura,vetor);
+		}else
+			aux = buscaBinaria(lendo,vetor);//procura pelo caracter a ser substituido
 			
-			if(lendo<0){//para leitura negatica de caracterres
-				procura=256+lendo;
-			}
+		printf("%d\n",aux);
+		/*if(lendo<0){//para leitura negatica de caracterres
+			procura=256+lendo;
+		}*/
+		
+		if(opcao==1){
+			//printf("lendo %c\n",lendo);
+			fputc(vetor[aux].comparado,arq_escrita);
 			
-			if(opcao==1){
-				if(lendo==comparando){
-					//printf("lendo %c\n",lendo);
-					fputc(comparado,arq_escrita);
-					break;
-				}
-			}else{
-				if(procura==comparando){
-					//printf("lendo %c\n",lendo);
-					fputc(comparado,arq_escrita);
-					break;
-				}
-			}
-		}
+			
+		}else{
+			
+			//printf("lendo %c\n",lendo);
+			fputc(vetor[aux].comparado,arq_escrita);
+			
+		}	
 	}
 		
+	fclose(tabela);
 	fclose(arq_escrita);
+	
 }
 
 int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1;
 	char chave_text[1000];
-	FILE *arq=NULL,*substituicao=NULL; 
+	FILE *arq=NULL; 
 	
 	printf("\n\n");
 	printf(".----------------------------------------------------.\n");
@@ -376,16 +407,10 @@ int main(int tam_vet, char *parametros[]){
 				return 0;
 			}
 			
-			substituicao = fopen(parametros[2],"r");//abriu o arquivo com a substituicao
-			if(!substituicao){
-				printf("Impossivel abrir arquivo de substituicao\n");
-				return 0;
-			}
-			
-			cifra_substituicao(arq,substituicao,op2);//manda arquivos ja abertos
+			cifra_substituicao(arq,parametros[2],op2);//manda arquivos ja abertos
 			
 			fclose(arq);
-			fclose(substituicao);
+		
 			
 		break;
 		case 10://sair
