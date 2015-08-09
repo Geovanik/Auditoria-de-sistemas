@@ -19,15 +19,15 @@ typedef struct caracters{
 
 
 int buscaBinaria (int x, caracters v[]) {
-   int e, m, d;                              // 1
-   e = 0; d = 255;                           // 2
-   while (e <= d) {                          // 3
-      m = (e + d)/2;                         // 4
-      if (v[m].comparando == x) return m;               // 5
-      if (v[m].comparando < x) e = m + 1;               // 6
-      else d = m - 1;                        // 7
-   }                                         // 8
-   return -1;                                // 9
+   int e, m, d;                              
+   e = 0; d = 255;                           
+   while (e <= d) {                          
+      m = (e + d)/2;                         
+      if (v[m].comparando == x) return m;               
+      if (v[m].comparando < x) e = m + 1;               
+      else d = m - 1;                        
+   }                                         
+   return -1;                                
 }          
 
 void cifra_cesar(int chave,FILE *arq){
@@ -66,7 +66,6 @@ void decifra_cesar(int chave,FILE *arq){
 	}
 	fclose(arq_escrita);
 }
-
 
 void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
 	int tam_entrada=0,aux=0,i=0;
@@ -129,7 +128,6 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		fclose(arq_escrita);
 	}	
 }
-
 
 void cifra_transposicao (int chave,FILE *arq, int opcao){
 	int i=0,j=0,controle_entrada=0,cont=0,colunas=0,tam_entrada=0;
@@ -206,65 +204,6 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	}
 }
 
-
-//eof -1 escreve o unsigned char no arquivo normal
-/*
-void cifra_substituicao(FILE *arq,FILE *tabela,int opcao){//recebe dois arquivos ja abertos
-	char pontos,lendo;
-	int comparando=0,comparado=0;
-	FILE *arq_escrita=NULL;
-	
-	if(opcao==1){//cifra
-		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
-		if(!arq_escrita){
-			printf("Impossivel abrir arquivo para salvar dados\n");
-			return;
-		}
-	}else{//decifra, opcao==2
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
-		if(!arq_escrita){
-			printf("Impossivel abrir arquivo para salvar dados\n");
-		return;
-		}	
-	}
-	
-	
-	//fseek(arq, 0, SEEK_SET);	
-	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo de entrada um caracter por vez
-
-		printf("lendo %c\n",lendo);
-		fseek(tabela, 0, SEEK_SET);//posiciona a cabeca de leitura no inicio do arq
-		while( (fscanf(tabela,"%d%c%d\n", &comparando, &pontos, &comparado))!=EOF ){//lendo a tabela de substituicao
-			
-			//if(lendo<0){//para leitura negatica de caracterres
-				//procura=256+lendo;
-				//printf("%d\n",procura);
-			//}
-			
-			if(opcao==1){
-				if(lendo==comparando){
-					//printf("lendo %c\n",lendo);
-				
-					printf("escrevendo %d",lendo);
-					fputc(comparado,arq_escrita);
-					break;
-				}
-			}
-			if(opcao==2){//trata a leitura de char negativo
-				if(lendo==comparado){
-					//printf("procura %c\n",procura);
-					printf("escrevendo %d",lendo);
-					fputc(comparando,arq_escrita);
-					break;
-				}
-			}
-		}
-	}
-		
-	fclose(arq_escrita);
-}*/
-
-
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
 	int i=0,aux=0,procura;
@@ -294,7 +233,6 @@ void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arq
 	while( (fscanf(tabela,"%d%c%d\n", &vetor[i].comparando, &pontos, &vetor[i].comparado))!=EOF )//lendo a tabela de substituicao e guardando
 		i++;
 		
-	
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo de entrada um caracter por vez
 
 		if(lendo<0){//para leitura negatica de caracterres
@@ -302,20 +240,13 @@ void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arq
 			aux = buscaBinaria(procura,vetor);
 		}else
 			aux = buscaBinaria(lendo,vetor);//procura pelo caracter a ser substituido
-			
-		printf("%d\n",aux);
-		/*if(lendo<0){//para leitura negatica de caracterres
-			procura=256+lendo;
-		}*/
 		
 		if(opcao==1){
 			//printf("lendo %c\n",lendo);
 			fputc(vetor[aux].comparado,arq_escrita);
 			
-			
 		}else{
 			
-			//printf("lendo %c\n",lendo);
 			fputc(vetor[aux].comparado,arq_escrita);
 			
 		}	
