@@ -1,14 +1,13 @@
 
 //como compilar: gcc cifras.c -o cifras -Wall       ./cifra_cesar texto  "texto é o arquivo com dados a serem criptografados"
 
-//OBS: SE NÃO TRABALHAR COM UNSIGNED CHAR OS VALORES FICAM NEGATIVOS, É POSSÍVEL IMPRIMIR CARACTERES NEGATIVOS???
-// e quando a entrada for menor que a chave????
-
-//cesar gcc cifras.c -o cifras -Wall       ./cifras texto     ./cifras criptografado
+//cesar gcc cifras.c -o cifras -Wall       ./cifras texto tabela3    ./cifras criptografado tabela3
 //vigenere 		 igual cesar
 //transposição
 //substituição  ./cifras texto tabela3  
  
+ 
+//arrumar: leitura da tabela de substituicao deve ser mais rápida, n leia todo o arquivo a cada caracter 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -61,7 +60,7 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	
 	
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
-		entrada[tam_entrada]=lendo;
+		entrada[tam_entrada]=lendo;//string que guarda a entrada
 		tam_entrada++;//guarda o tamanho da entrada
 	}
 
@@ -80,7 +79,7 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	
 	chave[tam_chave]='\0';
 	
-	if(opcao==1){
+	if(opcao==1){//criptografa
 		for(i=0;i < tam_entrada;i++){
 			
 			criptografado[i] = ((entrada[i]+chave[i]+256)%256);
@@ -93,17 +92,17 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 			return;
 		}
 	
-		fprintf(arq_escrita,"%s",criptografado);
+		fprintf(arq_escrita,"%s",criptografado);//escreve no arquivo
 		fclose(arq_escrita);
 		
-	}else{
+	}else{//descriptografa
 		for(i=0;i < tam_entrada;i++){
 			
 			criptografado[i] = ((entrada[i]-chave[i]+256)%256);
 		}
 		criptografado[i]='\0';
 	
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto descriptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
@@ -171,7 +170,7 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 			}
 		}
 		
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto dcriptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
@@ -180,7 +179,7 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		for(i=0;i < colunas; i++){//lendo os valores na vertical
 			for(j=0;j<chave;j++){
 				
-				if(matriz[j][i]=='#')
+				if(matriz[j][i]=='#')//retirando o #
 					putc (' ',arq_escrita);//escreve caracter no arquivo
 				else
 					putc (matriz[j][i],arq_escrita);//escreve caracter no arquivo
