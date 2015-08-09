@@ -30,14 +30,23 @@ int buscaBinaria (int x, caracters v[]) {
    return -1;                                
 }          
 
-void cifra_cesar(int chave,FILE *arq){
+void cifra_cesar(int chave,FILE *arq,int opcao){
 	FILE *arq_escrita;
 	char lendo;
 	
-	arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
-	if(!arq_escrita){
-		printf("Impossivel abrir arquivo para salvar dados\n");
-		return;
+	if(opcao==2){//decifrar
+		chave*=-1;
+		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
+	}else{//cifrar
+		arq_escrita = fopen("criptografado","w+");//criando arquivo onde sera colocado o texto criptografado
+		if(!arq_escrita){
+			printf("Impossivel abrir arquivo para salvar dados\n");
+			return;
+		}
 	}
 	
 	while( (lendo=fgetc(arq))!= EOF ){//criptografando o arquivo e guardando
@@ -46,24 +55,6 @@ void cifra_cesar(int chave,FILE *arq){
 		putc (lendo,arq_escrita);//escreve caracter no arquivo
 	}
 	
-	fclose(arq_escrita);
-}
-
-void decifra_cesar(int chave,FILE *arq){
-	char lendo;
-	FILE *arq_escrita;
-	
-	arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
-	if(!arq_escrita){
-		printf("Impossivel abrir arquivo para salvar dados\n");
-		return;
-	}
-	
-	while( (lendo=fgetc(arq))!= EOF ){
-
-		lendo=(lendo+256-chave)%256;//formula de criptografia
-		putc (lendo,arq_escrita);//escreve caracter no arquivo
-	}
 	fclose(arq_escrita);
 }
 
@@ -290,10 +281,10 @@ int main(int tam_vet, char *parametros[]){
 				return 0;
 			}
 			
-			if(op2==1)
-				cifra_cesar(chave,arq);
-			else
-				decifra_cesar(chave,arq);
+			
+				cifra_cesar(chave,arq,op2);
+		
+				//decifra_cesar(chave,arq);
 				
 			fclose(arq);//poderia fechar antes e abrir dentro das funcoes, ver relacao de beneficio
 			
