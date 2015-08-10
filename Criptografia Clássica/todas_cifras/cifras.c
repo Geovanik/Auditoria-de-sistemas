@@ -6,8 +6,11 @@
 //transposição
 //substituição  ./cifras texto tabela3  
  
+ //PARA TEXTOS ESCUROS
  
-//arrumar: leitura da tabela de substituicao deve ser mais rápida, n leia todo o arquivo a cada caracter 
+ 
+ 
+//descriptografar texto, só 80%, ou menos já que existe o texto claro
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -36,7 +39,7 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 	
 	if(opcao==2){//decifrar
 		chave*=-1;
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		arq_escrita = fopen("descriptografado","w+");//criando arquivo onde sera colocado o texto criptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
@@ -48,7 +51,7 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 			return;
 		}
 	}
-	
+	fseek(arq,0,SEEK_SET);
 	while( (lendo=fgetc(arq))!= EOF ){//criptografando o arquivo e guardando
 
 		lendo=(lendo+256+chave)%256;//formula de criptografia
@@ -56,6 +59,53 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 	}
 	
 	fclose(arq_escrita);
+}
+
+void decifra_cesar_escuro(char *t_claro, char *t_escuro){
+
+	FILE *escuro=NULL,*claro=NULL,*descriptografado=NULL;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	char compara_texto_original[200],compara_texto_claro[200];
+	int chave=0;
+	while(chave < 256){
+		cifra_cesar(chave,escuro,2);//2 indica para descriptografar
+		
+		descriptografado = fopen("descriptografado","r");//abrindo o texto descriptografado
+		if(!descriptografado){
+			printf("Impossivel abrir arquivo texto descriptografado\n");
+			return;
+		}
+		fseek(descriptografado,0,SEEK_SET);
+		fgets(compara_texto_original, sizeof(compara_texto_original), descriptografado);//ler só o começo do arquivo, uma linha ou até 200 caracters, texto original é o descriptografado
+		fseek(claro,0,SEEK_SET);
+		fgets(compara_texto_claro, sizeof(compara_texto_claro),claro ); //leu texto claro para comparar
+		
+		compara_texto_original[strlen((compara_texto_original))] ='\0';
+		compara_texto_claro[strlen((compara_texto_claro))] ='\0';
+		
+		if(strcmp(compara_texto_claro,compara_texto_original)==0){
+			printf("Texto compatível  :  chave = %d \n",chave);
+			break;
+		}else
+			printf("Analisando texto : Chave %d testada!\n",chave);
+		
+		fclose(descriptografado);
+		chave++;
+	}
+	fclose(claro);
+	fclose(escuro);
 }
 
 void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
@@ -245,7 +295,6 @@ void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arq
 		
 	fclose(tabela);
 	fclose(arq_escrita);
-	
 }
 
 int main(int tam_vet, char *parametros[]){
@@ -266,12 +315,17 @@ int main(int tam_vet, char *parametros[]){
 	scanf("%d", &op);
 	printf("\n\n");
 	
-	printf(" 1 para cifrar : 2 para decifrar \n");
+	printf(" 1 para cifrar um texto : 2 para decifrar um texto : 3 para decifrar texto escuro (sem a chave): \n");
 	scanf("%d",&op2);
 			
 	switch (op){
 		case 0://cifra de cesar
 			
+			if(op2==3){
+				decifra_cesar_escuro(parametros[1],parametros[2]);//deccifrando texto escuro
+				break;
+			}
+				
 			printf("Digite a chave: ");
 			scanf("%d",&chave);
 			
@@ -281,11 +335,8 @@ int main(int tam_vet, char *parametros[]){
 				return 0;
 			}
 			
-			
-				cifra_cesar(chave,arq,op2);
+			cifra_cesar(chave,arq,op2);
 		
-				//decifra_cesar(chave,arq);
-				
 			fclose(arq);//poderia fechar antes e abrir dentro das funcoes, ver relacao de beneficio
 			
 		break;
