@@ -202,6 +202,8 @@ void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave rep
 		c++;
 	}
 	printf("\n");
+	fclose(claro);
+	fclose(escuro);
 }
 
 void cifra_transposicao (int chave,FILE *arq, int opcao){
@@ -279,6 +281,49 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	}
 }
 
+/*void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
+	int tamanho_entrada=0,contador=0,i=0,contador_geral=0;
+	char lendo,lendo2;
+	FILE *escuro=NULL,*claro=NULL;
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	fseek(escuro,0,SEEK_END);//posiciona a agulha no final do arquivo
+	tamanho_entrada=ftell(escuro);//pega o tamanho do arquivo
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	fseek(claro,0,SEEK_SET);
+	
+	while( (lendo=fgetc(claro))!= EOF ){//lendo o arquivo escuro
+		contador=0;
+		while( (lendo2=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
+			
+			if(lendo==lendo2)
+				break;
+				
+			contador++;
+				
+		
+		}
+		
+		contador_geral=contador;
+		if(i>5)
+			break;
+	}
+	
+	fclose(claro);
+	fclose(escuro);
+
+}*/
+
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
 	int i=0,aux=0,procura;
@@ -329,6 +374,46 @@ void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arq
 		
 	fclose(tabela);
 	fclose(arq_escrita);
+}
+
+void decifra_substituicao_escuro(char *t_claro, char *t_escuro){
+	int lendo=0,lendo2=0,i=0;
+	caracters vetor[256];
+	FILE *escuro=NULL,*claro=NULL;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	while(i<256){//inicializando o vetor de caracters
+		vetor[i].comparando=0;
+		vetor[i].comparado=0;
+		i++;
+	}
+	
+	while( (lendo=fgetc(claro))!= EOF ){//lendo texto claro
+		lendo2=fgetc(escuro);//le do texto claro e escuro e escreve a chave mostrando em int qual foi a transformacao do valor
+		vetor[lendo].comparando=lendo;
+		vetor[lendo].comparado=lendo2;
+		
+		vetor[lendo2].comparando=lendo2;
+		vetor[lendo2].comparado=lendo;
+	}
+	
+	i=0;
+	while(i<256){
+		printf("%d : %d\n",vetor[i].comparando, vetor[i].comparado);
+		i++;
+	}
+	
 }
 
 int main(int tam_vet, char *parametros[]){
@@ -399,6 +484,12 @@ int main(int tam_vet, char *parametros[]){
 			
 		break;
 		case 2://cifra de transposicao
+			
+			if(op2==3){
+				//decifra_transposicao_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
+				break;
+			}
+			
 			printf("Digite a chave: ");
 			scanf("%d",&chave);
 			
@@ -414,6 +505,11 @@ int main(int tam_vet, char *parametros[]){
 			
 		break;
 		case 3://cifra de substituicao
+		
+			if(op2==3){
+				decifra_substituicao_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
+				break;
+			}
 		
 			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
 			if(!arq){
