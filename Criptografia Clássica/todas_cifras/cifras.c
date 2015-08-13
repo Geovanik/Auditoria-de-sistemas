@@ -61,7 +61,7 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 	fclose(arq_escrita);
 }
 
-void decifra_cesar_escuro(char *t_claro, char *t_escuro){
+/*void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 
 	FILE *escuro=NULL,*claro=NULL,*descriptografado=NULL;
 	
@@ -104,6 +104,35 @@ void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 		fclose(descriptografado);
 		chave++;
 	}
+	fclose(claro);
+	fclose(escuro);
+}*/
+
+void decifra_cesar_escuro(char *t_claro, char *t_escuro){
+	
+	FILE *escuro=NULL,*claro=NULL;
+	int lendo=0,lendo2=0,escreve=0;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+	fseek(claro,0,SEEK_SET);//posiciona a agulha no COMECO do arquivo
+	
+	lendo=fgetc(escuro); //le o arquivo escuro e claro
+	lendo2=fgetc(claro);
+	escreve=lendo-lendo2;
+	
+	printf("chave = %d\n",escreve);
 	fclose(claro);
 	fclose(escuro);
 }
@@ -413,7 +442,8 @@ void decifra_substituicao_escuro(char *t_claro, char *t_escuro){
 		printf("%d : %d\n",vetor[i].comparando, vetor[i].comparado);
 		i++;
 	}
-	
+	fclose(claro);
+	fclose(escuro);
 }
 
 int main(int tam_vet, char *parametros[]){
