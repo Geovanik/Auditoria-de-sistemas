@@ -170,6 +170,40 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	}	
 }
 
+
+void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave replicada
+	FILE *escuro=NULL,*claro=NULL;
+	
+	int c=0;
+	int lendo=0,lendo2=0;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	//fseek(claro,0,SEEK_END);//posiciona a agulha no final do arquivo
+	//tamanho=ftell(claro);//pega o tamanho do arquivo
+	
+	//char buffer[tamanho];
+	
+	fseek(claro,0,SEEK_SET);
+	while( (lendo=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
+		lendo2=fgetc(claro);//LEITURA DO CLARO
+		lendo = lendo-lendo2;
+		printf("%c",lendo);
+		c++;
+	}
+	printf("\n");
+}
+
 void cifra_transposicao (int chave,FILE *arq, int opcao){
 	int i=0,j=0,controle_entrada=0,cont=0,colunas=0,tam_entrada=0;
 	char lendo,entrada[1000];
@@ -322,7 +356,7 @@ int main(int tam_vet, char *parametros[]){
 		case 0://cifra de cesar
 			
 			if(op2==3){
-				decifra_cesar_escuro(parametros[1],parametros[2]);//deccifrando texto escuro
+				decifra_cesar_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
 				break;
 			}
 				
@@ -341,6 +375,13 @@ int main(int tam_vet, char *parametros[]){
 			
 		break;
 		case 1://cifra de vigenere
+		
+			if(op2==3){
+				decifra_vigenere_escuro(parametros[1],parametros[2]);//passa texto claro e texto escuro, dados dois textos, claro e escuro encontrar a chave
+				break;
+			}
+		
+		
 			printf("Digite um texto como chave: ");
 			getchar();//limpeza do buffer
 			fgets(chave_text,sizeof(chave_text),stdin);//chave de ate 100 caracteres
