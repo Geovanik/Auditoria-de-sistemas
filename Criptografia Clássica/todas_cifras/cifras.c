@@ -130,7 +130,7 @@ void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 	
 	lendo=fgetc(escuro); //le o arquivo escuro e claro
 	lendo2=fgetc(claro);
-	escreve=lendo-lendo2;
+	escreve=lendo-lendo2;//diminui o claro do escuro e teremos a chave
 	
 	printf("chave = %d\n",escreve);
 	fclose(claro);
@@ -240,12 +240,14 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	char lendo,entrada[1000];
 	FILE *arq_escrita=NULL;
 	
+	fseek(arq,0,SEEK_SET);//adicionado para posicionar o cabe;ote de leitura sempre no comeco do arquivo
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;
 		tam_entrada++;//guarda o tamanho da entrada
 	}
 	tam_entrada-=1;//pq estava contando o eof
 	entrada[tam_entrada]='\0';
+	
 	
 	while(tam_entrada%chave!=0){//o tamanho da entrada deve ter divisao exata pela chave
 		entrada[tam_entrada]='#';//simbolo escolhido para preencher 
@@ -282,6 +284,8 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		fclose(arq_escrita);
 		
 	}else{//decifrando
+		
+		
 
 		for(i=0;i < chave;i++){//colocando os valores na matriz na horizontal
 			
@@ -301,7 +305,8 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 			for(j=0;j<chave;j++){
 				
 				if(matriz[j][i]=='#')//retirando o #
-					putc (' ',arq_escrita);//escreve caracter no arquivo
+					putc ('\0',arq_escrita);//escreve caracter no arquivo
+					//putc (' ',arq_escrita);//funcionava para o trabalho 1
 				else
 					putc (matriz[j][i],arq_escrita);//escreve caracter no arquivo
 			}
@@ -310,18 +315,17 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 	}
 }
 
-/*void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
-	int tamanho_entrada=0,contador=0,i=0,contador_geral=0;
-	char lendo,lendo2;
-	FILE *escuro=NULL,*claro=NULL;
+void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
+	
+	int chave=1,tamanho=0,tamanho2;
+	FILE *escuro=NULL,*claro=NULL,*descriptografado=NULL;
+	char text_claro[200],text_descrip[200];
+	
 	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
 	if(!escuro){
 		printf("Impossivel abrir arquivo texto escuro\n");
 		return;
 	}
-	
-	fseek(escuro,0,SEEK_END);//posiciona a agulha no final do arquivo
-	tamanho_entrada=ftell(escuro);//pega o tamanho do arquivo
 	
 	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
 	if(!claro){
@@ -329,29 +333,120 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		return;
 	}
 	
-	fseek(claro,0,SEEK_SET);
 	
-	while( (lendo=fgetc(claro))!= EOF ){//lendo o arquivo escuro
-		contador=0;
-		while( (lendo2=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
-			
-			if(lendo==lendo2)
-				break;
-				
-			contador++;
-				
+	fgets(text_claro, sizeof(text_claro), claro);
+	//le uma string do texto claro e guarda
+	/*while(tamanho<200 || (lendo=fgetc(claro))!= EOF){//poderia ter usado fgets mas ai para quando ler um \n
+		text_claro[tamanho] = lendo;	
+		tamanho++;	
+	}*/
+	//printf("tamanho %d",tamanho);
+	//text_claro[tamanho]='\0';
+	while(tamanho<=strlen(text_claro)){
+		if(text_claro[tamanho] == '\n'){
+			text_claro[tamanho] = '\0';
+			break;
+		}
+		tamanho++;
 		
+	}
+	while (chave<256) {
+	
+		cifra_transposicao(chave,escuro,2);
+		//comparando com o texto  claro
+		
+		descriptografado = fopen("text_original","r");//abriu o arquivo passado por parametro
+		if(!descriptografado){
+			printf("Impossivel abrir arquivo texto descriptografado\n");
+			return;
 		}
 		
-		contador_geral=contador;
-		if(i>5)
+		tamanho=0;
+		fseek(descriptografado,0,SEEK_SET);
+		fgets(text_descrip, sizeof(text_descrip), descriptografado);
+		while(tamanho <= strlen(text_descrip)){
+			
+			if(text_descrip[tamanho] == '\n'){
+				text_descrip[tamanho] = '\0';
+				break;
+			}
+			tamanho++;	
+		}
+		/*while(tamanho<200 || (lendo=fgetc(descriptografado))!= EOF){//lendo um pedaco do texto descriptografado 
+			text_descrip[tamanho] = lendo;	
+			tamanho++;	
+		}
+		printf("tamanho %d\n",tamanho);
+		text_descrip[tamanho]='\0';//----------------------------------tamanho esta diferente */
+		
+		printf("%s\n",text_claro);
+		printf("%s\n",text_descrip);
+		
+		printf("%d\n",tamanho2=strlen(text_claro));
+		printf("%d\n",tamanho2=strlen(text_descrip));
+		
+		if(strcmp(text_descrip,text_claro)==0){//----------------------------------------------- n esta entrando aqui
+			printf("Texto compativel com chave = %d\n",chave);
 			break;
+		}
+		fclose(descriptografado);
+		chave++;
 	}
 	
+	/*int tamanho_entrada=0,n=1,linhas=0,i=0,j=0,h=0;
+	char lendo;
+	FILE *escuro=NULL,*claro=NULL;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
+	if(!claro){
+		printf("Impossivel abrir arquivo texto claro\n");
+		return;
+	}
+	
+	fseek(escuro,0,SEEK_END);//posiciona a agulha no final do arquivo
+	tamanho_entrada=ftell(escuro);//pega o tamanho do arquivo
+	
+	char entrada[tamanho_entrada];
+	
+	while( (lendo=fgetc(claro))!= EOF ){//lendo o arquivo escuro
+		entrada[h]=lendo;//guardando em entrada
+		h++;
+	}
+	linhas=tamanho_entrada/n;
+	char matriz[linhas][n];
+	fseek(claro,0,SEEK_SET);
+	
+	h=0;	
+
+	for(i=0;i<linhas;i++){
+		for(j=0;j<n;j++){
+		matriz[i][j]=entrada[h];
+		//printf("entrad %c\n",entrada[h]);
+		h++;
+		}
+	}
+	
+	//testa com o texto claro
+	
+	
+	
+	for(i=0;i<linhas;i++){
+		for(j=0;j<n;j++){
+			printf("%c",matriz[i][j]);
+		}
+		printf("\n");
+	}	
+	*/
 	fclose(claro);
 	fclose(escuro);
-
-}*/
+	
+}
 
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
@@ -516,7 +611,7 @@ int main(int tam_vet, char *parametros[]){
 		case 2://cifra de transposicao
 			
 			if(op2==3){
-				//decifra_transposicao_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
+				decifra_transposicao_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
 				break;
 			}
 			
@@ -551,7 +646,6 @@ int main(int tam_vet, char *parametros[]){
 			
 			fclose(arq);
 		
-			
 		break;
 		case 10://sair
 			printf("FIM \n");
