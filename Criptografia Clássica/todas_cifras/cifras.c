@@ -43,7 +43,7 @@ int buscaBinaria (int x, caracters v[]) {
 
 
 int hash(int chave){//mais tarde trate as colisões nessa função
-	return chave%100;//aqui temos a posicao do vetor
+	return chave/100;//aqui temos a posicao do vetor
 }
 
 void cifra_cesar(int chave,FILE *arq,int opcao){
@@ -74,52 +74,6 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 	fclose(arq_escrita);
 }
 
-/*void decifra_cesar_escuro(char *t_claro, char *t_escuro){
-
-	FILE *escuro=NULL,*claro=NULL,*descriptografado=NULL;
-	
-	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
-	if(!escuro){
-		printf("Impossivel abrir arquivo texto escuro\n");
-		return;
-	}
-	
-	claro = fopen(t_claro,"r");//abriu o arquivo passado por parametro
-	if(!claro){
-		printf("Impossivel abrir arquivo texto claro\n");
-		return;
-	}
-	
-	char compara_texto_original[200],compara_texto_claro[200];
-	int chave=0;
-	while(chave < 256){
-		cifra_cesar(chave,escuro,2);//2 indica para descriptografar
-		
-		descriptografado = fopen("descriptografado","r");//abrindo o texto descriptografado
-		if(!descriptografado){
-			printf("Impossivel abrir arquivo texto descriptografado\n");
-			return;
-		}
-		fseek(descriptografado,0,SEEK_SET);
-		fgets(compara_texto_original, sizeof(compara_texto_original), descriptografado);//ler só o começo do arquivo, uma linha ou até 200 caracters, texto original é o descriptografado
-		fseek(claro,0,SEEK_SET);
-		fgets(compara_texto_claro, sizeof(compara_texto_claro),claro ); //leu texto claro para comparar
-		
-		compara_texto_original[strlen((compara_texto_original))] ='\0';
-		compara_texto_claro[strlen((compara_texto_claro))] ='\0';
-		
-		if(strcmp(compara_texto_claro,compara_texto_original)==0){
-			printf("Texto compatível  :  chave = %d \n",chave);
-			break;
-		}else
-			printf("Analisando texto : Chave %d testada!\n",chave);
-		
-		fclose(descriptografado);
-		chave++;
-	}
-	fclose(claro);
-	fclose(escuro);
-}*/
 
 void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 	
@@ -150,10 +104,11 @@ void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 	fclose(escuro);
 }
 
-void decifra_cesar_escuro_escuro(char *t_escuro,char *dicionario[5]){//decifra texto sem o texto claro
+void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra texto sem o texto claro
 	FILE *escuro=NULL,*descripto=NULL;
-	int chave=1,buffer=0,cont=0;
-	char lendo, palavra[15];
+	int chave=1,encontrou=0;
+	char lendo, *palavra=NULL;
+	long cont=0,buffer=0;
 	
 	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
 	if(!escuro){
@@ -167,35 +122,59 @@ void decifra_cesar_escuro_escuro(char *t_escuro,char *dicionario[5]){//decifra t
 			return;
 		}
 	
-	while(chave<256){
+	//alocação dinâmica para leitura do arquivo decifrado. Quando decifrado com senha errada não se sabe o que vem do arquivo
+	palavra = malloc (sizeof (char)*10485760);//10 mb
+	if(palavra == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return;
+	}
+	
+
+	while(chave<256){	
+
+		fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
 		cifra_cesar(chave,escuro,2);//decifrando arquivo
-		//NAO POSSO LER SÓ O COMEÇO DO TEXTO PQ VAI QUE AS PALAVRAS DO DICIONÁRIO ESTÃO SÓ NO FIM
-		
 		
 		cont=0;
 		fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
-		while( (lendo=fgetc(descripto))!= EOF ){//criptografando o arquivo e guardando
-//somar as letras da palavar até o espaço em branco e com a soma fazer hash. if palavra na posicao hash é igual a do texto blz
-			if(lendo == ' ')
-				break;
+		while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
+		//somar as letras da palavar até o espaço em branco e com a soma fazer hash. if palavra na posicao hash é igual a do texto blz
+			//printf("%c",lendo);
 			
-			palavra[cont]=lendo;
-			palavra[cont+1]='\0';
-			buffer=lendo;
-			cont++;
-		}
+			if(lendo==' '){//talvez funcone apenas quando o texto decifrado esteja correto
+				
+				buffer = hash(buffer);//fazendo has das letras da palavra
 		
-		buffer = hash(buffer);
-		if(strcmp(dicionario[buffer],palavra)==0)
-			printf("palavra encontrada\n");
+				if(buffer<12)//posi o dicionario n possui mais que 10 palavras
+					if(strcmp(diciona[buffer].palavra,palavra)==0){
+						encontrou++;
+						if(encontrou>10){
+							printf("chave: %d\n",chave);
+							return;
+						}
+					}
+				
+				buffer=0;
+				cont=0;
+			}else{//nao e o espaco e nem o eof
+				palavra[cont]=lendo;
+				palavra[cont+1]='\0';
+				//printf("%s",palavra);
+				buffer+=lendo;
+				cont++;
+			}
+		}
 		chave++;
+		buffer=0;
+		cont=0;
 	}
 	
+	free(palavra);
 	fclose(descripto);
 	fclose(escuro);
 }
 
-
+//-------------------------------------------------------------------------------------------------------------------Vigenere
 
 void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
 	int tam_entrada=0,aux=0,i=0;
@@ -541,7 +520,7 @@ int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1,cont=0;
 	char chave_text[1000],lendo[20];
 	FILE *arq=NULL; 
-	dicionario buffer[11];
+	dicionario buffer[11]; //so tem 10 palavras
 	
 	
 	printf("\n\n");
@@ -575,18 +554,14 @@ int main(int tam_vet, char *parametros[]){
 					return 0;
 				}
 				//le o dicionario e coloca no vetor de palavras
-				while( (fscanf(arq,"%s ", lendo))!=EOF ){
-					strcpy(buffer[cont].palavra,lendo);
-					cont++;
-				
-				}
+				while( (fscanf(arq,"%s ", lendo))!=EOF )
+					strcpy(buffer[cont++].palavra,lendo);
+
 				//VERIFICAR PARAMETROS
-				//decifra_cesar_escuro_escuro(parametros[1],);//
+				decifra_cesar_escuro_escuro(parametros[1],buffer);				
 				
 				fclose(arq);
 				break;
-				
-				
 			}
 			
 				
