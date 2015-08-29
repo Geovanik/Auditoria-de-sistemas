@@ -1,9 +1,10 @@
 
 //como compilar: gcc cifras.c -o cifras -Wall       ./cifra_cesar texto  "texto é o arquivo com dados a serem criptografados"
 
-//cesar gcc cifras.c -o cifras -Wall       ./cifras texto tabela3    ./cifras criptografado tabela3
+//T1
+//cesar        	./cifras texto tabela3    ./cifras criptografado tabela3
 //vigenere 		 igual cesar
-//transposição
+//transposição	./cifras texto	./cifras criptografado		
 //substituição  ./cifras texto tabela3  
  
  //T2 descobrir chave com texto claro e escuro
@@ -144,7 +145,6 @@ void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra 
 			if(lendo==' '){//talvez funcone apenas quando o texto decifrado esteja correto
 				
 				buffer = hash(buffer);//fazendo has das letras da palavra
-		
 				if(buffer<12)//posi o dicionario n possui mais que 10 palavras
 					if(strcmp(diciona[buffer].palavra,palavra)==0){
 						encontrou++;
@@ -182,7 +182,6 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	unsigned char entrada[1000],criptografado[1000];//texto pode ter ate 1000 caracteres
 	unsigned int tam_chave=0;
 	FILE *arq_escrita;
-	
 	
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;//string que guarda a entrada
@@ -227,7 +226,7 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		}
 		criptografado[i]='\0';
 	
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto descriptografado
+		arq_escrita = fopen("descriptografado","w+");//criando arquivo onde sera colocado o texto descriptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
@@ -274,18 +273,42 @@ void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave rep
 	fclose(escuro);
 }
 
+void decifra_vigenere_escuro_escuro(char *t_escuro,dicionario diciona[]){
+	FILE *escuro=NULL;
+	char lendo;
+	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	
+	fseek(escuro,0,SEEK_SET);
+	while( (lendo=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
+		
+	}
+	
+	fclose(escuro);
+}
+
+//----------------------------------------------------------------------------------------------------------cifra de transposição
 void cifra_transposicao (int chave,FILE *arq, int opcao){
 	int i=0,j=0,controle_entrada=0,cont=0,colunas=0,tam_entrada=0;
-	char lendo,entrada[1000];
+	char lendo,*entrada=NULL;
 	FILE *arq_escrita=NULL;
 	
-	//
+	//alocação dinamica 
+	entrada = malloc (sizeof (char)*10485760);//10 mb
+	if(entrada == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return;
+	}
 	
-	fseek(arq,0,SEEK_SET);//adicionado para posicionar o cabe;ote de leitura sempre no comeco do arquivo//erroooooooo falha de seg
+	fseek(arq,0,SEEK_SET);//adicionado para posicionar o cabe;ote de leitura sempre no comeco do arquivo
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;
 		tam_entrada++;//guarda o tamanho da entrada
-		printf("tam %d",tam_entrada);
+
 	}
 	tam_entrada-=1;//pq estava contando o eof
 	entrada[tam_entrada]='\0';
@@ -337,7 +360,7 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 			}
 		}
 		
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto dcriptografado
+		arq_escrita = fopen("descriptografado","w+");//criando arquivo onde sera colocado o texto dcriptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
@@ -355,6 +378,7 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		}
 		fclose(arq_escrita);
 	}
+	free(entrada);
 }
 
 void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
@@ -391,7 +415,7 @@ void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
 		cifra_transposicao(chave,escuro,2);//decifrando arquivo
 		//comparando com o texto  claro
 		
-		descriptografado = fopen("text_original","r");//abriu o arquivo passado decifrado
+		descriptografado = fopen("descriptografado","r");//abriu o arquivo passado decifrado
 		if(!descriptografado){
 			printf("Impossivel abrir arquivo texto descriptografado\n");
 			return;
@@ -400,7 +424,7 @@ void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
 		tamanho=0;
 		fseek(descriptografado,0,SEEK_SET);
 		fgets(text_descrip, sizeof(text_descrip), descriptografado);//le até 200 caracters do descripto
-		printf("entrando no while");
+		
 		while(tamanho <= strlen(text_descrip)){
 			
 			if(text_descrip[tamanho] == '\n'){
@@ -422,7 +446,7 @@ void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
 	fclose(escuro);
 	
 }
-
+//-------------------------------------------------------------------------------------------------------------------substituicao
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
 	int i=0,aux=0,procura;
@@ -436,7 +460,7 @@ void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arq
 			return;
 		}
 	}else{//decifra, opcao==2
-		arq_escrita = fopen("text_original","w+");//criando arquivo onde sera colocado o texto criptografado
+		arq_escrita = fopen("descriptografado","w+");//criando arquivo onde sera colocado o texto criptografado
 		if(!arq_escrita){
 			printf("Impossivel abrir arquivo para salvar dados\n");
 		return;
