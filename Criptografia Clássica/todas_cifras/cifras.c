@@ -135,7 +135,7 @@ void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra 
 
 		fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
 		cifra_cesar(chave,escuro,2);//decifrando arquivo
-		
+
 		cont=0;
 		fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
 		while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
@@ -177,24 +177,38 @@ void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra 
 //-------------------------------------------------------------------------------------------------------------------Vigenere
 
 void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
-	int tam_entrada=0,aux=0,i=0;
+	long int tam_entrada=0,aux=0,i=0;
 	char lendo;
-	unsigned char entrada[1000],criptografado[1000];//texto pode ter ate 1000 caracteres
-	unsigned int tam_chave=0;
+	char *entrada,*criptografado;//texto pode ter ate 1000 caracteres
+	unsigned long int tam_chave=0;
 	FILE *arq_escrita;
+	
+	//alocação dinamica 
+	criptografado = malloc (sizeof (char)*10485760);//10 mb
+	if(criptografado == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return;
+	}
+	
+	//alocação dinamica 
+	entrada = malloc (sizeof (char)*10485760);//10 mb
+	if(entrada == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return;
+	}
 	
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;//string que guarda a entrada
 		tam_entrada++;//guarda o tamanho da entrada
 	}
-
+	
 	entrada[tam_entrada]='\0';
 	
 	while(chave[i] != '\0'){//feito para saber o tamanho da chave ja que unsigned char nao funciona strlen
 		tam_chave++;
 		i++;
 	}
-	
+
 	while(tam_chave < tam_entrada){//deixando a chave no tamanho da entrada
 		chave[tam_chave] = chave[aux];
 		tam_chave++;
@@ -235,6 +249,9 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		fprintf(arq_escrita,"%s",criptografado);
 		fclose(arq_escrita);
 	}	
+	
+	free(entrada);
+	free(criptografado);
 }
 
 
@@ -274,8 +291,9 @@ void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave rep
 }
 
 void decifra_vigenere_escuro_escuro(char *t_escuro,dicionario diciona[]){
-	FILE *escuro=NULL;
-	char lendo;
+	FILE *escuro=NULL,*descripto=NULL;
+	char chave[6]="A",lendo;//comeca com A e tem no maximo 6 caracters para senha
+	int tam_chave=0,dachave=65;
 	
 	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
 	if(!escuro){
@@ -283,12 +301,43 @@ void decifra_vigenere_escuro_escuro(char *t_escuro,dicionario diciona[]){
 		return;
 	}
 	
-	fseek(escuro,0,SEEK_SET);
-	while( (lendo=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
-		
+	descripto = fopen("descriptografado","r");//abriu o arquivo passado por parametro
+	if(!descripto){
+		printf("Impossivel abrir arquivo texto descriptografado \n");
+		return;
 	}
 	
+	while (tam_chave>=6){
+		
+		cifra_vigenere(chave,escuro,2);//descriptografo o texto
+		fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+		while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
+			
+			if(lendo==' '){//funcone apenas quando o texto decifrado esteja correto
+						
+					printf("chave: %s\n",chave);
+					return;
+				
+			}
+		}
+		if(dachave > 64 && dachave < 91){
+			dachave++;
+			chave[tam_chave]=dachave;//da a mudança de chave para 
+			printf("chave %s\n",chave);
+		}else{
+			dachave=65;
+			tam_chave++;
+			
+		}
+		
+	}
+	/*fseek(escuro,0,SEEK_SET);
+	while( (lendo=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
+		
+	}*/
+	
 	fclose(escuro);
+	fclose(descripto);
 }
 
 //----------------------------------------------------------------------------------------------------------cifra de transposição
@@ -349,8 +398,6 @@ void cifra_transposicao (int chave,FILE *arq, int opcao){
 		fclose(arq_escrita);
 		
 	}else{//decifrando
-		
-		
 
 		for(i=0;i < chave;i++){//colocando os valores na matriz na horizontal
 			
@@ -542,10 +589,9 @@ void decifra_substituicao_escuro(char *t_claro, char *t_escuro){
 
 int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1,cont=0;
-	char chave_text[1000],lendo[20];
+	char *chave_text,lendo[20];
 	FILE *arq=NULL; 
 	dicionario buffer[11]; //so tem 10 palavras
-	
 	
 	printf("\n\n");
 	printf(".----------------------------------------------------.\n");
@@ -572,7 +618,7 @@ int main(int tam_vet, char *parametros[]){
 			}
 			
 			if(op2==4){
-				arq = fopen(parametros[2],"r");//abrindo dicionario e uardando em vetor
+				arq = fopen(parametros[2],"r");//abrindo dicionario e guardando em vetor
 				if(!arq){
 					printf("Impossivel abrir arquivo passado\n");
 					return 0;
@@ -605,11 +651,33 @@ int main(int tam_vet, char *parametros[]){
 		break;
 		case 1://cifra de vigenere
 		
+			chave_text = malloc (sizeof (char)*10485769);//+10 mb quando usa vegenere
+			if(chave_text == NULL){
+				printf("Impossível alocar 10 mb para a chave!\n");
+				return 1;
+			}
+			
 			if(op2==3){
 				decifra_vigenere_escuro(parametros[1],parametros[2]);//passa texto claro e texto escuro, dados dois textos, claro e escuro encontrar a chave
 				break;
 			}
 		
+			if(op2==4){//escuro escuro com dicionário de palavars
+				arq = fopen(parametros[2],"r");//abrindo dicionario e uardando em vetor
+				if(!arq){
+					printf("Impossivel abrir arquivo passado\n");
+					return 0;
+				}
+				//le o dicionario e coloca no vetor de palavras
+				while( (fscanf(arq,"%s ", lendo))!=EOF )
+					strcpy(buffer[cont++].palavra,lendo);
+
+				//VERIFICAR PARAMETROS
+				decifra_vigenere_escuro_escuro(parametros[1],buffer);				
+				
+				fclose(arq);
+				break;
+			}
 		
 			printf("Digite um texto como chave: ");
 			getchar();//limpeza do buffer
@@ -671,5 +739,6 @@ int main(int tam_vet, char *parametros[]){
 		break;
 	}
 	
+	free(chave_text);
 	return 0;
 }
