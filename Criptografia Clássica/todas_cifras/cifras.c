@@ -636,11 +636,74 @@ void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
 	
 	fclose(claro);
 	fclose(escuro);
-	
 }
+
+
 void decifra_transposicao_escuro_escuro(char *t_escuro,dicionario diciona[]){
+	FILE *escuro=NULL,*descripto=NULL;
+	int chave=1,encontrou=0;
+	char lendo, *palavra=NULL;
+	long cont=0,buffer=0;
 	
+	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
+	if(!escuro){
+		printf("Impossivel abrir arquivo texto escuro\n");
+		return;
+	}
+	descripto = fopen("descriptografado","w+");//o arquivo deve existir previamente
+	if(!descripto){
+		printf("Impossivel abrir arquivo descriptografado\n");
+		return;
+	}
 	
+	//alocação dinâmica para leitura do arquivo decifrado. Quando decifrado com senha errada não se sabe o que vem do arquivo
+	palavra = malloc (sizeof (char)*10485760);//10 mb
+	if(palavra == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return;
+	}
+	
+	while(chave<256){	
+
+		fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+		cifra_transposicao(chave,escuro,2);//decifrando arquivo
+
+		cont=0;
+		fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+		while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
+		//somar as letras da palavar até o espaço em branco e com a soma fazer hash. if palavra na posicao hash é igual a do texto blz
+			//printf("%c",lendo);
+			
+			if(lendo==' '){//talvez funcone apenas quando o texto decifrado esteja correto
+				
+				buffer = hash(buffer);//fazendo has das letras da palavra
+				if(buffer<12)//posi o dicionario n possui mais que 10 palavras
+					if(strcmp(diciona[buffer].palavra,palavra)==0){
+						encontrou++;
+						if(encontrou>12000){
+							printf("chave: %d\n",chave);
+							return;
+						}
+					}
+				
+				buffer=0;
+				cont=0;
+			}else{//nao e o espaco e nem o eof
+				palavra[cont]=lendo;
+				palavra[cont+1]='\0';
+				//printf("%s",palavra);
+				buffer+=lendo;
+				cont++;
+			}
+		}
+		chave++;
+		buffer=0;
+		cont=0;
+	}
+	
+	free(palavra);
+	fclose(descripto);
+	fclose(escuro);
 }
 //-------------------------------------------------------------------------------------------------------------------substituicao
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
@@ -855,6 +918,23 @@ int main(int tam_vet, char *parametros[]){
 			
 			if(op2==3){
 				decifra_transposicao_escuro(parametros[1],parametros[2]);//dados dois textos, claro e escuro encontrar a chave
+				break;
+			}
+			
+			if(op2==4){//escuro escuro com dicionário de palavars
+				arq = fopen(parametros[2],"r");//abrindo dicionario e guardando em vetor
+				if(!arq){
+					printf("Impossivel abrir arquivo passado\n");
+					return 0;
+				}
+				//le o dicionario e coloca no vetor de palavras
+				while( (fscanf(arq,"%s ", lendo))!=EOF )
+					strcpy(buffer[cont++].palavra,lendo);
+
+				//mandando o texto escuro e o dicionario
+				decifra_transposicao_escuro_escuro(parametros[1],buffer);				
+				
+				fclose(arq);
 				break;
 			}
 			
