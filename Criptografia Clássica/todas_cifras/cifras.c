@@ -14,11 +14,13 @@
  //T3	DEscobrir a chave tendo apenas os textos escuros
  
  
- 
 //descriptografar texto, só 80%, ou menos já que existe o texto claro
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+/* Tamanho máximo da string de entrada. */
+#define MAX 100
 
 typedef struct caracters{//usado na cifra de substituicao
 	int comparando;
@@ -42,11 +44,11 @@ int buscaBinaria (int x, caracters v[]) {
    return -1;                                
 }          
 
-
 int hash(int chave){//mais tarde trate as colisões nessa função
 	return chave/100;//aqui temos a posicao do vetor
 }
 
+//------------------------------------------------------------------------------------------------------cIFRA DE CESAR
 void cifra_cesar(int chave,FILE *arq,int opcao){
 	FILE *arq_escrita;
 	char lendo;
@@ -74,7 +76,6 @@ void cifra_cesar(int chave,FILE *arq,int opcao){
 	
 	fclose(arq_escrita);
 }
-
 
 void decifra_cesar_escuro(char *t_claro, char *t_escuro){
 	
@@ -130,7 +131,6 @@ void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra 
 		return;
 	}
 	
-
 	while(chave<256){	
 
 		fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
@@ -174,14 +174,18 @@ void decifra_cesar_escuro_escuro(char *t_escuro,dicionario diciona[]){//decifra 
 	fclose(escuro);
 }
 
-//-------------------------------------------------------------------------------------------------------------------Vigenere
 
+//-------------------------------------------------------------------------------------------------------------------Vigenere
 void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = decifrar
 	long int tam_entrada=0,aux=0,i=0;
-	char lendo;
+	char lendo='a';
 	char *entrada,*criptografado;//texto pode ter ate 1000 caracteres
 	unsigned long int tam_chave=0;
 	FILE *arq_escrita;
+	
+
+		printf("\nchave %s\n",chave);
+
 	
 	//alocação dinamica 
 	criptografado = malloc (sizeof (char)*10485760);//10 mb
@@ -196,11 +200,13 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		printf("Impossível alocar 10 mb!\n");
 		return;
 	}
-	
+	fseek(arq,0,SEEK_SET);
 	while( (lendo=fgetc(arq))!= EOF ){//le o arquivo e guarda-o em uma string
 		entrada[tam_entrada]=lendo;//string que guarda a entrada
 		tam_entrada++;//guarda o tamanho da entrada
 	}
+	printf("TAMNHO DA ENTRADA %ld",tam_entrada);
+	//printf("ENTRADA %s\n",entrada);
 	
 	entrada[tam_entrada]='\0';
 	
@@ -208,19 +214,23 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 		tam_chave++;
 		i++;
 	}
-
+	printf("TAMNHO DA chave %ld",tam_chave);
 	while(tam_chave < tam_entrada){//deixando a chave no tamanho da entrada
 		chave[tam_chave] = chave[aux];
 		tam_chave++;
 		aux++;
 	}
-	
+	printf("TAMNHO DA chave %ld\n",tam_chave);
+	//printf("chave %s\n",chave);
 	chave[tam_chave]='\0';
 	
 	if(opcao==1){//criptografa
 		for(i=0;i < tam_entrada;i++){
 			
+			//printf("\nchave %d\n",chave[i]);
+			//printf("\nentrada %d\n",entrada[i]);
 			criptografado[i] = ((entrada[i]+chave[i]+256)%256);
+			//printf("criptografado %d\n",criptografado[i]);
 		}
 		criptografado[i]='\0';
 	
@@ -229,14 +239,19 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
 		}
-	
+		
 		fprintf(arq_escrita,"%s",criptografado);//escreve no arquivo
 		fclose(arq_escrita);
 		
 	}else{//descriptografa
+		
 		for(i=0;i < tam_entrada;i++){
 			
+			//printf("\nchave %d\n",chave[i]);
+			//printf("\nchave %d\n",entrada[i]);
+			
 			criptografado[i] = ((entrada[i]-chave[i]+256)%256);
+			//printf("criptografado %c\n",criptografado[i]);
 		}
 		criptografado[i]='\0';
 	
@@ -245,7 +260,8 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 			printf("Impossivel abrir arquivo para salvar dados\n");
 			return;
 		}
-	
+		//printf("%s\n",criptografado);
+		
 		fprintf(arq_escrita,"%s",criptografado);
 		fclose(arq_escrita);
 	}	
@@ -253,7 +269,6 @@ void cifra_vigenere (char chave[],FILE *arq, int opcao){//opcao 1 = cifrar 2 = d
 	free(entrada);
 	free(criptografado);
 }
-
 
 void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave replicada
 	FILE *escuro=NULL,*claro=NULL;
@@ -290,55 +305,185 @@ void decifra_vigenere_escuro(char *t_claro, char *t_escuro){//mostra a chave rep
 	fclose(escuro);
 }
 
-void decifra_vigenere_escuro_escuro(char *t_escuro,dicionario diciona[]){
-	FILE *escuro=NULL,*descripto=NULL;
-	char chave[6]="A",lendo;//comeca com A e tem no maximo 6 caracters para senha
-	int tam_chave=0,dachave=65;
+char * decifrando(char chave[],FILE *descripto,FILE *escuro,dicionario diciona[]){//verificando se a chave permutada esta certa
+	char lendo,*palavra=NULL;
+	long cont=0,buffer=0;
+	int encontrou=0;	
+	
+	palavra = malloc (sizeof (char)*10485760);//10 mb
+	if(palavra == NULL){
+		printf("Impossível alocar 10 mb!\n");
+		return NULL;
+	}
+	
+	//fseek(escuro,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+	cifra_vigenere(chave,escuro,2);//descriptografo o texto
+	
+	cont=0;
+	fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
+	while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
+	//somar as letras da palavar até o espaço em branco e com a soma fazer hash. if palavra na posicao hash é igual a do texto blz
+		//printf("%c",lendo);
+		
+		if(lendo==' '){//talvez funcone apenas quando o texto decifrado esteja correto
+			
+			buffer = hash(buffer);//fazendo has das letras da palavra
+		
+			if(buffer<12){//posi o dicionario n possui mais que 10 palavras
+				
+				if(strcmp(diciona[buffer].palavra,palavra)==0){
+					//printf("palavra %s\n",palavra);
+					//printf("dicionario %s\n",diciona[buffer].palavra);
+					encontrou++;
+					printf("\nENCONTROU %d\n",encontrou);
+					if(encontrou>100){
+						//printf("chave: %s\n",chave);
+						return chave;
+					}
+				}
+			}
+			
+			buffer=0;
+			cont=0;
+		}else{//nao e o espaco e nem o eof
+			palavra[cont]=lendo;
+			palavra[cont+1]='\0';
+			//printf("formando palavra %s\n",palavra);
+			buffer+=lendo;
+			cont++;
+		}
+	}
+
+	free(palavra);
+	return NULL;
+}
+
+char * permuta(char *t_escuro,dicionario diciona[]){
+	int cont=0;
+	char *chave_text=NULL,*retorno=NULL;
+	
+	
+	chave_text = malloc (sizeof (char)*10485769);//+10 mb para chave de vegenere
+	if(chave_text == NULL){
+		printf("Impossível alocar 10 mb para a chave!\n");
+		return NULL;
+	}
+	
+	
+    /* Nosso número na base n. Ele é um vetor
+     * de n+1 posições representando um número
+     * na base n.
+     */
+    int *num ;
+    /* input é a string de entrada, e str
+     * receberá cada permutação.
+     */ 
+    char input[MAX], str[MAX] ;
+    int n, r, i, j, k ;
+
+    printf("Entre com o conjunto inicial: ") ;
+    scanf("%s", input) ;
+
+    printf("Entre com o r: ") ;
+    scanf("%d", &r) ;
+
+	FILE *descripto=NULL;
+	FILE *escuro=NULL;
+	
+	descripto = fopen("descriptografado","r");//abriu o arquivo onde o texto sera descriptografado
+	if(!descripto){
+		printf("Impossivel abrir arquivo texto descriptografado \n");
+		return NULL;
+	}
 	
 	escuro = fopen(t_escuro,"r");//abriu o arquivo passado por parametro
 	if(!escuro){
 		printf("Impossivel abrir arquivo texto escuro\n");
-		return;
+		return NULL;
 	}
 	
-	descripto = fopen("descriptografado","r");//abriu o arquivo passado por parametro
-	if(!descripto){
-		printf("Impossivel abrir arquivo texto descriptografado \n");
-		return;
-	}
-	
-	while (tam_chave>=6){
-		
-		cifra_vigenere(chave,escuro,2);//descriptografo o texto
-		fseek(descripto,0,SEEK_SET);//posiciona a agulha no comeco do arquivo
-		while( (lendo=fgetc(descripto))!= EOF ){//deve ler todas as palavras do arquivo descriptografado
-			
-			if(lendo==' '){//funcone apenas quando o texto decifrado esteja correto
-						
-					printf("chave: %s\n",chave);
-					return;
-				
-			}
-		}
-		if(dachave > 64 && dachave < 91){
-			dachave++;
-			chave[tam_chave]=dachave;//da a mudança de chave para 
-			printf("chave %s\n",chave);
-		}else{
-			dachave=65;
-			tam_chave++;
-			
-		}
-		
-	}
-	/*fseek(escuro,0,SEEK_SET);
-	while( (lendo=fgetc(escuro))!= EOF ){//lendo o arquivo escuro
-		
-	}*/
-	
-	fclose(escuro);
+    /* Aqui elimina-se caracteres repetidos na entrada.
+     * Esse procedimento não faz parte do algoritmo, e
+     * só é feito por questões práticas.
+     */
+    n = strlen(input) ;
+    j = 0;
+    str[0] = 0 ;
+    for ( i = 0; i < n; i++ ) {
+        if ( strchr(str, input[i]) == NULL ) {
+            str[j] = input[i] ;
+            j++ ;
+            str[j] = 0 ;
+        }
+    }
+    strcpy(input, str) ;
+    n = strlen(input) ;
+
+    /* Cria o nosso número. Ele é um vetor de
+     * r+1 posições, sendo que a última é 
+     * reservada para indicar quando todos os
+     * números de tamanho r foram gerados. */
+    num = (int *) calloc( (r+1), sizeof(int)) ;
+    if ( num == NULL ) {
+        perror("calloc") ;
+        return NULL;
+    }
+
+    /* Termina quando a última posição do vetor
+     * for 1. */
+    while ( num[r] == 0 ) {
+        for ( i = 0; i < n; i++ ) {
+            /* processo de mapeamento. */
+            for ( j = 0, k = r-1; j < r; j++ ) {
+                str[k] = input[num[j]] ;
+                k-- ;
+            }
+            str[r] = 0 ;
+            printf("\nstr %s\n",str);
+			strcpy(chave_text,str);
+			printf("chave antes de mandar %s",chave_text);
+			chave_text[strlen(chave_text)]='\0';
+            retorno=decifrando (chave_text,descripto,escuro,diciona);//manda a chave e o arquivo onde sera descriptografado o texto
+            printf("retorno %p\n",retorno);
+            if(retorno!=NULL)
+				return chave_text;
+            cont++;
+            
+            /* incrementa o algarismo menos significativo. */
+            num[0]++ ;
+        }
+
+        /* Muda de "casa" e lança os vai uns. */ 
+        for ( i = 0; i < r; i++ ) {
+            if ( num[i] == n ) {
+                num[i] = 0 ;
+                num[i+1]++ ;
+            }
+        }
+    }
+    
 	fclose(descripto);
+	fclose(escuro);
+    return NULL ;
 }
+
+void decifra_vigenere_escuro_escuro(char *t_escuro,dicionario diciona[]){
+	char *chave2=NULL;
+	int a=0;
+
+	chave2 = permuta(t_escuro,diciona);
+	
+	if(chave2 == NULL)
+		printf("chave nao encontrada\n");
+	else{
+		while(a<20){
+			printf("%c",chave2[a]);
+			a++;
+		}
+		printf("\n");
+	}
+}
+
 
 //----------------------------------------------------------------------------------------------------------cifra de transposição
 void cifra_transposicao (int chave,FILE *arq, int opcao){
@@ -493,6 +638,10 @@ void decifra_transposicao_escuro(char *t_claro, char *t_escuro){
 	fclose(escuro);
 	
 }
+void decifra_transposicao_escuro_escuro(char *t_escuro,dicionario diciona[]){
+	
+	
+}
 //-------------------------------------------------------------------------------------------------------------------substituicao
 void cifra_substituicao(FILE *arq,char *tabela_char,int opcao){//recebe dois arquivos ja abertos
 	char lendo,pontos;
@@ -587,6 +736,8 @@ void decifra_substituicao_escuro(char *t_claro, char *t_escuro){
 	fclose(escuro);
 }
 
+
+//----------------------------------------------------------------------------------------------------------------------------------------------MAIN()
 int main(int tam_vet, char *parametros[]){
 	int op=-1,chave=-1,op2=-1,cont=0;
 	char *chave_text,lendo[20];
@@ -678,11 +829,14 @@ int main(int tam_vet, char *parametros[]){
 				fclose(arq);
 				break;
 			}
-		
+			
+			printf("%d\n",strlen(chave_text));
 			printf("Digite um texto como chave: ");
 			getchar();//limpeza do buffer
-			fgets(chave_text,sizeof(chave_text),stdin);//chave de ate 100 caracteres
-			chave_text[strlen(chave_text)-1]='\0';//substitui /n por /0
+			fgets(chave_text,sizeof(10485769),stdin);
+			printf("%d\n",strlen(chave_text));
+			//chave_text[strlen(chave_text)]='\0';//substitui /n por /0
+			printf("chave antes de mandar main: %s\n",chave_text);
 			
 			arq = fopen(parametros[1],"r");//abriu o arquivo passado por parametro
 			if(!arq){
@@ -692,7 +846,9 @@ int main(int tam_vet, char *parametros[]){
 
 			cifra_vigenere (chave_text,arq,op2);//cifrando
 		
+			//free(chave_text);
 			fclose(arq);
+			
 			
 		break;
 		case 2://cifra de transposicao
