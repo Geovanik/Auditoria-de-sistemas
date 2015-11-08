@@ -129,11 +129,13 @@ int main(int argc,char**argv){
 	//recebendo a entrada preenchendo o vetor de swap
 	//LER DE 8 EM 8 E COLOCAR EM UMA POSICAO DA ENTRADA
 	swap[contador--]='\0';//delimitando swap para 8 digitos
-	while(posicao>0){													//le o arquivo até encontrar o : e guarda a posição
+	while(posicao>0){													
+		
+		lendo = fgetc(pt_file);
 		
 		if(lendo=='\n'){//muda o  vetor de entradas, reinicializa variaveis
 			if(contador!=-1)
-				valores_menores(swap,contador,cont_entrada,entrada2);
+				valores_menores(swap,(contador+1),cont_entrada,entrada2);//contador decrementou uma vez a mais
 			
 			flag=0;
 			cont_entrada=19;
@@ -141,13 +143,16 @@ int main(int argc,char**argv){
 			swap[contador--]='\0';//delimitando swap para 8 digitos
 		}
 			
-		lendo = fgetc(pt_file);
+		
 		cont--;
 		fseek(pt_file, cont, SEEK_END);
-		posicao=ftell(pt_file);
+		posicao=ftell(pt_file);	
 		
 		swap[contador]=lendo;
 		contador--;
+		
+		if(lendo=='\n')//para que na proxima leitura o \n seja subscrito
+			contador++;
 		
 		if(contador==-1){//8 dígitos foram lidos
 			if(flag)
@@ -163,6 +168,9 @@ int main(int argc,char**argv){
 		
 		}
 	}
+	if(contador!=-1)
+		valores_menores(swap,(contador+1),cont_entrada,entrada1);
+		
 	/*int h=0;
 	while(h<17){
 		printf("%d ",h);
