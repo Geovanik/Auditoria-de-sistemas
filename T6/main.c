@@ -83,6 +83,29 @@ void quebra_valores(long long int swap[],int entrada[],int t){//quebra os valore
 	if(swap2[7]!=0)//para valores menores que 8 bits, valores mais significativos
 		uniao_valores(swap2,entrada,posicao);
 }
+
+void valores_menores(char swap[],int contador, int cont_entrada, int entrada[]){//coloca na entrada valores que possuem menos de 8 digitos
+	int cont=0,teste=0,n;
+	char *aux=NULL;
+	//aux[8]='\0';
+	n=8-contador;
+	printf("n=%d\n",n);
+	printf("cont %d\n",contador);
+	
+	aux = (char*)malloc(n*sizeof(char));
+	teste=strlen(aux);
+	printf("len \n%d",teste);//tamanho da erradooooooooooooooooooooooo
+	
+	while(contador<8){
+		aux[cont]=swap[contador];
+		printf("%d",aux[contador]);
+		contador++;	
+		cont++;
+	}
+	entrada[cont_entrada]=atoi(aux);
+	printf("\nmenor %d\n",entrada[cont_entrada]);
+}
+
 int main(int argc,char**argv){
 	int entrada1[20],entrada2[20],resultado[39],cont=0,contador=8,posicao=10,cont_entrada=19,flag=1;
 	//resultado em que cada posicao tem ate 8 digitos
@@ -110,7 +133,8 @@ int main(int argc,char**argv){
 		
 		if(lendo=='\n'){//muda o  vetor de entradas, reinicializa variaveis
 			if(contador!=-1)
-				printf("diferente");
+				valores_menores(swap,contador,cont_entrada,entrada2);
+			
 			flag=0;
 			cont_entrada=19;
 			contador=8;
