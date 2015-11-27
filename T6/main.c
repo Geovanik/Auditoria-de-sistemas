@@ -11,20 +11,55 @@
 #include <stdlib.h>
 #define MAX 1123456789 
 
-void multiplicacao(int entrada1[], int entrada2[], int resultado[]){
-	int cont=9;
-	while(cont>=0){
-		resultado[cont]=entrada1[cont]*entrada2[cont];
+int retira_overflow(int valor){
+	int aux=0,cont=8,aux2=0;
+	
+	while(cont>0){
+		aux=valor%10;
 		cont--;
+		valor=valor/10;
+		printf("valor = %d\n",valor);
+		aux2=aux2+aux;
+	}
+	printf("AUX2 = %d\n",aux2);
+	return aux2;
+}
+
+
+
+int overflow(int valor){//verificando se existe overflow em valor de 8 digitos
+	int aux=0;
+	aux=valor/10000000;//verificando se existe overflow
+	if(aux>9)//retorna os 2 primeiros digito do valor
+		return aux;
+	else
+		return 0;//nao tem overflow
+}	
+
+
+void multiplicacao(int entrada1[], int entrada2[], int resultado[]){
+	int cont=19,cont2=36;//tamanho das entradas e resultado
+	while(cont>=0){
+		resultado[cont2]=entrada1[cont]*entrada2[cont];
+		cont--;
+		cont2--;
 	}
 }
 
 void soma(int entrada1[], int entrada2[], int resultado[]){
-	int cont=9;
+	int cont=19,cont2=36,over=0;//tamanho das entradas e resultado
 	while(cont>=0){
-		resultado[cont]=entrada1[cont]+entrada2[cont];
+		resultado[cont2]=entrada1[cont]+entrada2[cont]+over;
+		over = overflow(resultado[cont2]);
+		if(over>0){
+			printf("IDENTIFICADO %d\n",over);
+			over=over/10;//real overflow
+			retira_overflow(resultado[cont2]);//quebra o valor resultado retirando o digito da frente
+		}
 		cont--;
+		cont2--;
 	}
+	//conta os digitos do resultado, se der mais que 8 coloca na posicao anterior
 }
 
 void exponenciacao(){
@@ -85,16 +120,10 @@ void quebra_valores(long long int swap[],int entrada[],int t){//quebra os valore
 }
 
 void valores_menores(char swap[],int contador, int cont_entrada, int entrada[]){//coloca na entrada valores que possuem menos de 8 digitos
-	int cont=0,teste=0,n;
+	int cont=0;
 	char *aux=NULL;
-	//aux[8]='\0';
-	n=8-contador;
-	printf("n=%d\n",n);
-	printf("cont %d\n",contador);
 	
-	aux = (char*)malloc(n*sizeof(char));
-	teste=strlen(aux);
-	printf("len \n%d",teste);//tamanho da erradooooooooooooooooooooooo
+	aux = (char*)malloc((8-contador)*sizeof(char));//alocando vetor exato de quantidade de digitos
 	
 	while(contador<8){
 		aux[cont]=swap[contador];
@@ -107,7 +136,7 @@ void valores_menores(char swap[],int contador, int cont_entrada, int entrada[]){
 }
 
 int main(int argc,char**argv){
-	int entrada1[20],entrada2[20],resultado[39],cont=0,contador=8,posicao=10,cont_entrada=19,flag=1;
+	int entrada1[20],entrada2[20],resultado[39],cont=0,contador=8,posicao=10,cont_entrada=19,flag=1,operacao=0;
 	//resultado em que cada posicao tem ate 8 digitos
 	//os valores de entrada podem ser do max do tamanho 8*20
 	//flag 1 indica entrada2 0 a entrada1
@@ -126,7 +155,7 @@ int main(int argc,char**argv){
 	}
 	fseek(pt_file, -2, SEEK_END);//posiciona o pont no final do arq no ultimo digito do numero
 	cont=-2;
-	//recebendo a entrada preenchendo o vetor de swap
+	//recebendo a entrada com espaço em branco no começo do arq, preenchendo o vetor de swap
 	//LER DE 8 EM 8 E COLOCAR EM UMA POSICAO DA ENTRADA
 	swap[contador--]='\0';//delimitando swap para 8 digitos
 	while(posicao>0){													
@@ -143,7 +172,6 @@ int main(int argc,char**argv){
 			swap[contador--]='\0';//delimitando swap para 8 digitos
 		}
 			
-		
 		cont--;
 		fseek(pt_file, cont, SEEK_END);
 		posicao=ftell(pt_file);	
@@ -160,78 +188,29 @@ int main(int argc,char**argv){
 			else
 				entrada1[cont_entrada]=atoi(swap);
 			
-			//printf("entra %d\n",entrada1[cont_entrada]);
 			cont_entrada--;
-			
 			contador=8;
 			swap[contador--]='\0';
-		
 		}
 	}
-	if(contador!=-1)
+
+	if(contador!=-1)//verificando se n existe valores com menos de 8 digitos na entrada1
 		valores_menores(swap,(contador+1),cont_entrada,entrada1);
 		
-	/*int h=0;
-	while(h<17){
-		printf("%d ",h);
-		printf("entrada1 %d\n",entrada1[h++]);
-	}*/
-	/*while(controle==1){
-		scanf("%lld",&valor);
-		swap[t++]=valor;
-		
-		printf("Deseja continuar digitando um mesmo numero?\n 1 - sim\n 0 - nao\n");
-		scanf("%d",&controle);
-	}*/
-	/*
-	quebra_valores(swap,entrada1,t);//quebrando os digitos e colocando na entrada
-	
-	while(t<50){
-		swap[t++]=0;
-	}
-	controle=1;
-	t=0;
-	
-	printf("Digite a entrada para o segundo numero, 18 digitos por vez\n");
-	while(controle==1){
-		scanf("%lld",&valor);
-		swap[t++]=valor;
-		
-		printf("Deseja continuar digitando um mesmo numero?\n 1 - sim\n 0 - nao\n");
-		scanf("%d",&controle);
-	}
-	quebra_valores(swap,entrada2,t);//quebrando os digitos e colocando na entrada
-	
-	printf("\nqual e a operacao? 1 - soma\t 2 - exponenciacao\t 3 - inverso modular\n");
+	fclose(pt_file);
+	printf("\nqual e a operacao? 1 - soma\t 2 - subtracao\t 3 - multiplicacao\t 4 - divisao\t 5 - exponencicao\n");
 	scanf("%d",&operacao);
 	if(operacao==1)
 		soma(entrada1,entrada2,resultado);
 	else if(operacao==2)
-		exponenciacao();
+		multiplicacao(entrada1,entrada2,resultado);//fazer uma generica
 	
 	else 
 		inverso_modular();
 	
 	int h=0;
-	while(h<10){
-		printf("%d ",h);
-		printf("entrada1 %d\n",entrada1[h++]);
-	}
-	
-	
-	h=0;
-	while(h<37){
-		printf("%d ",h);
-		printf("resultado %d\n",resultado[h++]);
-	}
-	* 
-	* while(a>=0)
-				printf("%c",swap[a--]);
-	* */
-	
-	int h=0;
 	while(h<20){
-		printf("\n%d ",h);
+		printf("%d ",h);
 		printf("entrada1 %d\n",entrada1[h++]);
 	}
 	
@@ -241,5 +220,10 @@ int main(int argc,char**argv){
 		printf("entrada2 %d\n",entrada2[h++]);
 	}
 	
+	h=0;
+	while(h<37){
+		printf("%d ",h);
+		printf("resultado %d\n",resultado[h++]);
+	}
 	return 0;
 }
